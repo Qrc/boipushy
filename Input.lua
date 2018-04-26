@@ -151,18 +151,24 @@ local gamepad_to_button = {fdown = 'a', fup = 'y', fleft = 'x', fright = 'b', ba
                            dpup = 'dpup', dpdown = 'dpdown', dpleft = 'dpleft', dpright = 'dpright'}
 local axis_to_button = {leftx = 'leftx', lefty = 'lefty', rightx = 'rightx', righty = 'righty', l2 = 'triggerleft', r2 = 'triggerright'}
 
--- in LÖVE 11.0, love.keyboard.isDown raises an error when the key is not a KeyConstant
-local function isGamepadKey(key)
+-- in LÖVE 11.0, love.keyboard.isDown(key) raises an error when 'key' is not a KeyConstant
+-- true if key corresponds to a gamepad button or axis
+local function from_gamepad(key)
     for k, _ in pairs(gamepad_to_button) do
-        if key == k then
-            return true
-        end
+        if key == k then return true end
     end
 
     for k, _ in pairs(axis_to_button) do
-        if key == k then
-            return true
-        end
+        if key == k then return true end
+    end
+
+    return false
+end
+
+-- true if key corresponds to a mouse button
+local function from_mouse(key)
+    for k, _ in pairs(key_to_button) do
+        if key == k then return true end
     end
 
     return false
@@ -191,7 +197,11 @@ function Input:down(action, interval, delay)
 
     elseif action and not interval and not delay then
         for _, key in ipairs(self.binds[action]) do
-            if not isGamepadKey(key) and (love.keyboard.isDown(key) or love.mouse.isDown(key_to_button[key] or 0)) then
+            if from_mouse(key) then
+                if love.mouse.isDown(key_to_button[key] or 0) then
+                    return true
+                end
+            elseif not from_gamepad(key) and love.keyboard.isDown(key) then
                 return true
             end
             
