@@ -207,6 +207,34 @@ function Input:down(action, interval, delay)
     end
 end
 
+
+local axisDefinitions = {}
+
+function Input:defineAxis(actionAxis, actionMin, actionMax, threshold)
+    axisDefinitions[actionAxis] = { actionMin, actionMax, threshold or 0 }
+end
+
+function Input:axis(actionAxis)
+    local definition = axisDefinitions[actionAxis]
+
+    if self:down(definition[1]) then return -1 end
+    if self:down(definition[2]) then return 1 end
+
+    local raw = self:down(actionAxis) or 0
+    if math.abs(raw) < definition[3] then raw = 0 end
+    return raw
+end
+
+function Input:rawAxis(actionAxis)
+    local definition = axisDefinitions[actionAxis]
+
+    if self:down(definition[1]) then return -1 end
+    if self:down(definition[2]) then return 1 end
+
+    return self:down(actionAxis) or 0
+end
+
+
 function Input:unbind(key)
     for action, keys in pairs(self.binds) do
         for i = #keys, 1, -1 do
